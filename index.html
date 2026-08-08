@@ -632,61 +632,65 @@
       </div>
     </div>
 
-<!-- BLOCK 1: ADD NEW QUEST -->
-<div class="block-card">
-  <div class="block-header-title">
-    <i class="fa-solid fa-circle-plus"></i> BLOCK 1: ADD NEW QUEST
-  </div>
-  
-  <div class="time-banner">
-    <span id="dateDisplay"><i class="fa-regular fa-calendar"></i> Sat, Aug 8, 2026</span>
-    <span id="timeDisplay">07:14:57 PM</span>
-  </div>
+<!-- BLOCK 1: Add Task Form -->
+    <div class="block-card">
+      <div class="block-header-title">
+        <i class="fa-solid fa-plus-circle"></i> Block 1: Add New Quest
+      </div>
 
-  <div class="stats-row">
-    <div class="stat-box">
-      <div class="stat-num" id="totalTasksCount">0</div>
-      <div class="stat-label">Tasks</div>
+      <div class="time-header">
+        <div id="liveDate"><i class="fa-regular fa-calendar-days" style="margin-right: 6px;"></i>--</div>
+        <div class="live-time" id="liveTime">--:--:--</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Tasks</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statPending">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statRate">0%</div>
+          <div class="stat-label">Done</div>
+        </div>
+      </div>
+
+      <form class="input-form" id="taskForm">
+        <div class="input-row">
+          <input type="text" id="taskInput" class="task-input" placeholder="Task description..." autocomplete="off" />
+          <input type="number" id="estTimeInput" class="est-time-input" placeholder="Est Mins" min="5" max="300" />
+          <select id="prioritySelect" class="priority-select">
+            <option value="low">Low (+10 XP)</option>
+            <option value="medium" selected>Med (+15 XP)</option>
+            <option value="high">Hard (+20 XP)</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <select id="categorySelect" class="category-select">
+            <option value="study" selected>Study / Education</option>
+            <option value="sports">Sports / Exercise</option>
+            <option value="others">Others</option>
+          </select>
+          <input type="datetime-local" id="dueDateInput" class="due-input" />
+        </div>
+        <div class="input-row">
+          <select id="repeatSelect" class="repeat-select" style="flex: 1; min-width: 0;">
+            <option value="none">Does not repeat</option>
+            <option value="daily">Every day</option>
+            <option value="3days">Every 3 days</option>
+            <option value="weekly">Every week</option>
+            <option value="2weeks">Every 2 weeks</option>
+            <option value="monthly">Every month</option>
+          </select>
+          <button type="submit" class="add-btn">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+      </form>
     </div>
-    <div class="stat-box">
-      <div class="stat-num" id="pendingTasksCount">0</div>
-      <div class="stat-label">Pending</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-num" id="donePercentage">0%</div>
-      <div class="stat-label">Done</div>
-    </div>
-  </div>
-
-  <div class="input-row">
-    <input type="text" id="taskInput" placeholder="Task descr" />
-    <input type="number" id="estMinsInput" placeholder="Est Mins" style="max-width: 90px;" />
-    <select id="prioritySelect">
-      <option value="low">Easy (+10 XP)</option>
-      <option value="medium" selected>Med (+15 XP)</option>
-      <option value="high">Hard (+30 XP)</option>
-    </select>
-  </div>
-
-  <!-- FIXED ROW: ONE CATEGORY SELECT + ONE TAG INPUT -->
-  <div class="input-row">
-    <select id="categorySelect">
-      <option value="study" selected>Study / Education</option>
-      <option value="sports">Sports / Exercise</option>
-      <option value="others">Others</option>
-    </select>
-    <input type="text" id="tagInput" placeholder="#Tag (e.g. Exam)" />
-  </div>
-
-  <div class="input-row">
-    <select id="repeatSelect">
-      <option value="none">Does not repeat</option>
-      <option value="daily">Daily</option>
-      <option value="weekly">Weekly</option>
-    </select>
-    <button class="add-btn" onclick="addTask()"><i class="fa-solid fa-plus"></i> Add</button>
-  </div>
-</div>
 
     <!-- BLOCK 2: Focus Zone & Custom Timer -->
     <div class="block-card">
