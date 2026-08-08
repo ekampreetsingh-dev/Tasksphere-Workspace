@@ -3,269 +3,1449 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TaskSphere Workspace</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#8b5cf6" />
+  <title>TaskSphere : Productivity Workspace</title>
+
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- External Libraries: Confetti & Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+      --glass-bg: rgba(255, 255, 255, 0.07);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --accent-glow: #8b5cf6;
+      --accent-secondary: #ec4899;
+      --accent-green: #10b981;
+      --accent-fire: #f97316;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-radius: 20px;
+    }
+
+    body.theme-cyberpunk {
+      --bg-gradient: linear-gradient(135deg, #030712 0%, #111827 50%, #1f2937 100%);
+      --accent-glow: #06b6d4;
+      --accent-secondary: #f43f5e;
+    }
+    body.theme-amoled {
+      --bg-gradient: #000000;
+      --glass-bg: rgba(20, 20, 20, 0.8);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --accent-glow: #10b981;
+    }
+    body.theme-sunset {
+      --bg-gradient: linear-gradient(135deg, #2e1065 0%, #701a75 50%, #831843 100%);
+      --accent-glow: #f59e0b;
+      --accent-secondary: #f43f5e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+      overflow-x: hidden;
+      transition: background 0.5s ease;
+    }
+
+    .bg-shape {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .shape-1 { width: 300px; height: 300px; background: #8b5cf6; top: -50px; left: -50px; opacity: 0.4; }
+    .shape-2 { width: 300px; height: 300px; background: #ec4899; bottom: -50px; right: -50px; opacity: 0.3; }
+
+    .dashboard-layout {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .top-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 10px 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-brand {
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-actions { display: flex; gap: 6px; }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .block-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--card-radius);
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .block-header-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .live-time { color: #fff; font-weight: 700; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+    .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+
+    .input-form { display: flex; flex-direction: column; gap: 10px; }
+    .input-row { display: flex; gap: 8px; width: 100%; }
+
+    .task-input {
+      flex: 1;
+      min-width: 0;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .priority-select, .due-input, .repeat-select, .category-select, .est-time-input, .focus-time-input {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 8px 10px;
+      color: var(--text-main);
+      outline: none;
+      font-size: 0.8rem;
+      min-width: 0;
+    }
+
+    .priority-select { width: 130px; flex-shrink: 0; }
+    .est-time-input { width: 90px; text-align: center; }
+    .category-select { flex: 1; }
+    .due-input { flex: 1; color-scheme: dark; }
+
+    .priority-select option, .repeat-select option, .category-select option {
+      background: #1e1b4b;
+      color: #fff;
+    }
+
+    .add-btn {
+      background: linear-gradient(135deg, var(--accent-glow), var(--accent-secondary));
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .focus-card {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .timer-display {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--accent-glow);
+      margin: 8px 0;
+    }
+
+    .custom-focus-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .focus-time-input { width: 70px; text-align: center; }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .focus-btn-group { display: flex; gap: 8px; justify-content: center; }
+
+    .focus-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .focus-btn.primary {
+      background: linear-gradient(135deg, var(--accent-glow), var(--accent-secondary));
+      border: none;
+    }
+
+    .filter-bar { display: flex; gap: 6px; }
+
+    .filter-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: rgba(139, 92, 246, 0.3);
+      border-color: var(--accent-glow);
+      color: var(--text-main);
+    }
+
+    .tamagotchi-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .pet-stage-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tamagotchi-avatar {
+      font-size: 3rem;
+      cursor: pointer;
+      display: inline-block;
+      transition: transform 0.2s;
+      animation: floatIdle 3s infinite ease-in-out;
+    }
+
+    @keyframes floatIdle {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(-4deg); }
+    }
+
+    .tamagotchi-avatar.happy-dance { animation: happyVictory 0.5s infinite alternate; }
+
+    @keyframes happyVictory {
+      0% { transform: translateY(0) scale(1) rotate(-10deg); }
+      100% { transform: translateY(-12px) scale(1.2) rotate(10deg); }
+    }
+
+    .pet-stats {
+      flex: 1;
+      margin-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pet-stat-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; }
+
+    .pet-bar-outer {
+      width: 60%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .pet-bar-inner {
+      height: 100%;
+      width: 50%;
+      background: var(--accent-green);
+      transition: width 0.4s ease;
+    }
+
+    .boss-box {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .boss-avatar { font-size: 2rem; animation: bossShake 2s infinite ease-in-out; }
+
+    @keyframes bossShake {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1) rotate(5deg); }
+    }
+
+    .boss-hp-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .boss-hp-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      transition: width 0.4s ease;
+    }
+
+    .rank-card {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .rank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .rank-title { display: flex; align-items: center; gap: 8px; }
+
+    .rank-badge-icon {
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .rank-name { font-weight: 700; font-size: 0.95rem; }
+    .level-tag { font-size: 0.75rem; color: var(--accent-secondary); font-weight: 600; }
+
+    .xp-bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .xp-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-glow), var(--accent-secondary));
+      border-radius: 20px;
+      transition: width 0.5s ease;
+    }
+
+    .xp-text { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); }
+
+    .streak-banner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+
+    .streak-card {
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      border-radius: 12px;
+      padding: 8px 4px;
+      text-align: center;
+    }
+
+    .streak-card.badge-card { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.25); }
+    .streak-card.shield-card { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25); }
+
+    .streak-card i { font-size: 0.9rem; margin-bottom: 2px; }
+    .streak-card.daily-card i { color: #f97316; }
+    .streak-card.weekly-card i { color: #38bdf8; }
+    .streak-card.badge-card i { color: #f59e0b; }
+    .streak-card.shield-card i { color: #10b981; }
+
+    .streak-val { font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .streak-lbl { font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; }
+
+    .graph-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+
+    .graph-cell {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .graph-cell.lvl-1 { background: rgba(16, 185, 129, 0.25); border-color: rgba(16, 185, 129, 0.4); }
+    .graph-cell.lvl-2 { background: rgba(16, 185, 129, 0.55); border-color: rgba(16, 185, 129, 0.7); }
+    .graph-cell.lvl-3 { background: rgba(16, 185, 129, 0.9); border-color: #10b981; }
+
+    .task-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .task-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: grab;
+    }
+
+    .task-item.dragging { opacity: 0.4; }
+
+    .task-main-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+    .task-item.completed .task-text { text-decoration: line-through; color: var(--text-muted); }
+
+    .custom-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .task-item.completed .custom-check { background: var(--accent-green); border-color: var(--accent-green); }
+    .custom-check i { font-size: 0.6rem; color: #fff; display: none; }
+    .task-item.completed .custom-check i { display: block; }
+
+    .task-content { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .task-text { font-size: 0.85rem; word-break: break-word; }
+
+    .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+    .priority-badge { font-size: 0.58rem; padding: 1px 5px; border-radius: 8px; font-weight: 700; text-transform: uppercase; }
+    .p-high { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .p-med { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .p-low { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+
+    .est-badge {
+      font-size: 0.6rem;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+      padding: 1px 5px;
+      border-radius: 8px;
+    }
+
+    .subtask-container {
+      margin-left: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 2px solid rgba(255, 255, 255, 0.1);
+      padding-left: 8px;
+    }
+
+    .subtask-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #cbd5e1; }
+    .subtask-item.done { text-decoration: line-through; opacity: 0.5; }
+
+    .subtask-add-row { display: flex; gap: 6px; margin-top: 4px; }
+
+    .subtask-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 4px 8px;
+      color: #fff;
+      font-size: 0.72rem;
+      flex: 1;
+    }
+
+    .sub-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+
+    .action-btn { background: transparent; border: none; color: var(--text-muted); font-size: 0.8rem; padding: 4px; cursor: pointer; }
+    .cat-empty { font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 10px; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .modal-card {
+      background: var(--bg-gradient);
+      border: 1px solid var(--accent-glow);
+      border-radius: 20px;
+      padding: 20px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 0 30px var(--accent-glow);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .quest-log-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .chat-btn {
+      background: var(--accent-glow);
+      border: none;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="app-container">
-    
-    <!-- HEADER -->
-    <div class="app-header">
-      <h1>TaskSphere</h1>
-      <div class="header-actions">
-        <button class="header-btn"><i class="fa-solid fa-scroll"></i> Quest Log</button>
-        <button class="header-btn"><i class="fa-solid fa-store"></i> Shop</button>
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+
+  <div class="dashboard-layout">
+
+    <!-- Top Navigation Bar -->
+    <div class="top-navbar">
+      <div class="nav-brand">TaskSphere</div>
+      <div class="nav-actions">
+        <button class="nav-btn" onclick="openQuestLogModal()"><i class="fa-solid fa-scroll"></i> Quest Log</button>
+        <button class="nav-btn" onclick="openShopModal()"><i class="fa-solid fa-store"></i> Shop</button>
       </div>
     </div>
 
-    <!-- BLOCK 1: ADD NEW QUEST -->
+    <!-- BLOCK 1: Add Task Form -->
     <div class="block-card">
       <div class="block-header-title">
-        <i class="fa-solid fa-circle-plus"></i> BLOCK 1: ADD NEW QUEST
-      </div>
-      
-      <div class="time-banner">
-        <span id="dateDisplay"><i class="fa-regular fa-calendar"></i> Sat, Aug 8, 2026</span>
-        <span id="timeDisplay">06:34:10 PM</span>
+        <i class="fa-solid fa-plus-circle"></i> Block 1: Add New Quest
       </div>
 
-      <div class="stats-row">
+      <div class="time-header">
+        <div id="liveDate"><i class="fa-regular fa-calendar-days" style="margin-right: 6px;"></i>--</div>
+        <div class="live-time" id="liveTime">--:--:--</div>
+      </div>
+
+      <div class="stats-grid">
         <div class="stat-box">
-          <div class="stat-num" id="totalTasksCount">0</div>
+          <div class="stat-value" id="statTotal">0</div>
           <div class="stat-label">Tasks</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num" id="pendingTasksCount">0</div>
+          <div class="stat-value" id="statPending">0</div>
           <div class="stat-label">Pending</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num" id="donePercentage">0%</div>
+          <div class="stat-value" id="statRate">0%</div>
           <div class="stat-label">Done</div>
         </div>
       </div>
 
-      <div class="input-row">
-        <input type="text" id="taskInput" placeholder="Task descr" />
-        <input type="number" id="estMinsInput" placeholder="Est Mins" style="max-width: 90px;" />
-        <select id="prioritySelect">
-          <option value="low">Easy (+10 XP)</option>
-          <option value="medium" selected>Med (+15 XP)</option>
-          <option value="high">Hard (+30 XP)</option>
-        </select>
-      </div>
-
-      <div class="input-row">
-        <select id="categorySelect">
-          <option value="study" selected>Study / Education</option>
-          <option value="sports">Sports / Exercise</option>
-          <option value="others">Others</option>
-        </select>
-        <input type="text" id="tagInput" placeholder="#Tag" />
-      </div>
-
-      <div class="input-row">
-        <select id="repeatSelect">
-          <option value="none">Does not repeat</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-        </select>
-        <button class="add-btn" onclick="addTask()"><i class="fa-solid fa-plus"></i> Add</button>
-      </div>
-    </div>
-
-    <!-- BLOCK 2: VIEW FILTER -->
-    <div class="block-card">
-      <div class="block-header-title">
-        <i class="fa-solid fa-filter"></i> BLOCK 2: VIEW FILTER
-      </div>
-      <div class="filter-bar">
-        <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-        <button class="filter-btn" onclick="setFilter('active', this)">Active</button>
-        <button class="filter-btn" onclick="setFilter('completed', this)">Done</button>
-      </div>
-    </div>
-
-    <!-- BLOCK 3: VIRTUAL COMPANION & BOSS QUEST -->
-    <div class="block-card">
-      <div class="block-header-title">
-        <i class="fa-solid fa-paw"></i> BLOCK 3: VIRTUAL COMPANION & BOSS QUEST
-      </div>
-      <div class="companion-box">
-        <div class="egg-icon">🥚</div>
-        <div style="flex: 1;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700;">
-            <span>Baby Egg (Gain 250 XP to hatch!)</span>
-            <span style="color: var(--accent-teal);">Happy & Active</span>
-          </div>
-          <div class="progress-bar"><div class="progress-fill"></div></div>
-          <button style="background: rgba(255,255,255,0.08); border: none; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">
-            🍵 Feed Mana (+20 Energy)
+      <form class="input-form" id="taskForm">
+        <div class="input-row">
+          <input type="text" id="taskInput" class="task-input" placeholder="Task description..." autocomplete="off" />
+          <input type="number" id="estTimeInput" class="est-time-input" placeholder="Est Mins" min="5" max="300" />
+          <select id="prioritySelect" class="priority-select">
+            <option value="low">Low (+10 XP)</option>
+            <option value="medium" selected>Med (+15 XP)</option>
+            <option value="high">Hard (+20 XP)</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <select id="categorySelect" class="category-select">
+            <option value="study" selected>Study / Education</option>
+            <option value="sports">Sports / Exercise</option>
+            <option value="others">Others</option>
+          </select>
+          <input type="datetime-local" id="dueDateInput" class="due-input" />
+        </div>
+        <div class="input-row">
+          <select id="categorySelect" class="category-select">
+            <option value="study" selected>Study / Education</option>
+            <option value="sports">Sports / Exercise</option>
+            <option value="others">Others</option>
+          </select>
+          <input type="datetime-local" id="dueDateInput" class="due-input" />
+        </div>
+        <div class="input-row">
+          <select id="repeatSelect" class="repeat-select" style="flex: 1; min-width: 0;">
+            <option value="none">Does not repeat</option>
+            <option value="daily">Every day</option>
+            <option value="3days">Every 3 days</option>
+            <option value="weekly">Every week</option>
+            <option value="2weeks">Every 2 weeks</option>
+            <option value="monthly">Every month</option>
+          </select>
+          <button type="submit" class="add-btn">
+            <i class="fa-solid fa-plus"></i> Add
           </button>
         </div>
+      </form>
+    </div>
+
+    <!-- BLOCK 2: Focus Zone & Custom Timer -->
+    <div class="block-card">
+      <div class="block-header-title">
+        <i class="fa-solid fa-bullseye"></i> Block 2: Focus Zone (Custom Timer)
       </div>
-      <div class="boss-box">
-        <div>
-          <div style="font-size: 0.85rem; font-weight: 800; color: #ef4444;">Weekly Boss: Procrastination Dragon</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">500 / 500 HP</div>
+      <div class="focus-card">
+        <div class="timer-display" id="focusTimerDisplay">25:00</div>
+        
+        <div class="custom-focus-controls">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Set Custom (Mins):</span>
+          <input type="number" id="customFocusMins" class="focus-time-input" min="1" max="180" value="25" onchange="applyCustomFocusTime()" />
+          <button class="preset-btn" onclick="setPresetTime(15)">15m</button>
+          <button class="preset-btn" onclick="setPresetTime(25)">25m</button>
+          <button class="preset-btn" onclick="setPresetTime(45)">45m</button>
+          <button class="preset-btn" onclick="setPresetTime(60)">60m</button>
         </div>
-        <div style="font-size: 1.8rem;">🐲</div>
+
+        <div class="focus-btn-group">
+          <button class="focus-btn primary" id="startFocusBtn" onclick="toggleFocusSession()"><i class="fa-solid fa-play"></i> Start Focus</button>
+          <button class="focus-btn" onclick="AudioEngine.playChirp()"><i class="fa-solid fa-volume-high"></i> Sound Test</button>
+        </div>
       </div>
     </div>
 
-    <!-- BLOCK 4: RANK & LEVEL -->
+    <!-- BLOCK 3: Filter Tabs -->
     <div class="block-card">
       <div class="block-header-title">
-        <i class="fa-solid fa-trophy"></i> BLOCK 4: RANK & LEVEL
+        <i class="fa-solid fa-filter"></i> Block 3: View Filter
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-shield-halved" style="font-size: 1.8rem; color: #f59e0b;"></i>
-          <div>
-            <div style="font-weight: 800; font-size: 1rem;">Novice Tasker</div>
-            <div style="font-size: 0.75rem; color: var(--accent-pink);">Level 1</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="completed">Done</button>
+      </div>
+    </div>
+
+    <!-- BLOCK 4: Tamagotchi Companion & Boss Quest -->
+    <div class="block-card">
+      <div class="block-header-title">
+        <i class="fa-solid fa-paw"></i> Block 4: Virtual Companion & Boss Quest
+      </div>
+      <div class="tamagotchi-card">
+        <div class="pet-stage-box">
+          <div class="tamagotchi-avatar" id="tamagotchiAvatar" onclick="interactPet()">🥚</div>
+          <div class="pet-stats">
+            <div class="pet-stat-row">
+              <span id="petNameLabel" style="font-weight:700;">Baby Egg</span>
+              <span id="petMoodText" style="color:var(--accent-secondary);">Sleeping</span>
+            </div>
+            <div class="pet-stat-row">
+              <span>Energy:</span>
+              <div class="pet-bar-outer"><div class="pet-bar-inner" id="petEnergyBar"></div></div>
+            </div>
+            <button class="sub-btn" onclick="feedPet()" style="margin-top:4px;"><i class="fa-solid fa-cookie-bite"></i> Feed Mana (+20 Energy)</button>
           </div>
         </div>
-        <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted);">
-          Completed<br><strong style="color: var(--accent-teal); font-size: 1rem;">0</strong>
+
+        <div class="boss-box">
+          <div>
+            <div style="font-weight:800; font-size:0.85rem; color:#f87171;">Weekly Boss: Procrastination Dragon</div>
+            <div style="font-size:0.7rem; color:var(--text-muted);" id="bossHpText">500 / 500 HP</div>
+            <div class="boss-hp-bar"><div class="boss-hp-fill" id="bossHpFill"></div></div>
+          </div>
+          <div class="boss-avatar">🐉</div>
         </div>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width: 25%; background: var(--accent-purple);"></div></div>
-      <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
-        <span>65 XP</span>
-        <span>185 XP to next level</span>
       </div>
     </div>
 
-    <!-- BLOCK 5: STREAK & SHIELD SYSTEM -->
+    <!-- BLOCK 5: Rank & Level System -->
     <div class="block-card">
       <div class="block-header-title">
-        <i class="fa-solid fa-fire"></i> BLOCK 5: 🔥 STREAK & SHIELD SYSTEM
+        <i class="fa-solid fa-trophy"></i> Block 5: Rank & Level
       </div>
-      <div class="streak-grid">
-        <div class="streak-card">
+      <div class="rank-card">
+        <div class="rank-header">
+          <div class="rank-title">
+            <i class="fa-solid fa-shield-halved rank-badge-icon" id="rankIcon"></i>
+            <div>
+              <div class="rank-name" id="rankName">Novice Tasker</div>
+              <div class="level-tag" id="levelTag">Level 1</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 0.65rem; color: var(--text-muted);">Completed</span>
+            <div style="font-weight: 700; font-size: 1rem; color: var(--accent-green);" id="completedCount">0</div>
+          </div>
+        </div>
+        <div class="xp-bar-container">
+          <div class="xp-bar-fill" id="xpBarFill"></div>
+        </div>
+        <div class="xp-text">
+          <span id="currentXPText">0 XP</span>
+          <span id="nextLevelXPText">250 XP to next level</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 6: Streak System & Streak Freeze Shield -->
+    <div class="block-card">
+      <div class="block-header-title">
+        <i class="fa-solid fa-fire"></i> Block 6: 🔥 Streak & Shield System
+      </div>
+      <div class="streak-banner">
+        <div class="streak-card daily-card">
           <i class="fa-solid fa-fire"></i>
-          <div class="streak-value">1 Days</div>
-          <div class="streak-title">Daily Streak</div>
+          <div class="streak-val" id="dailyStreakVal">0 Days</div>
+          <div class="streak-lbl">Daily Streak</div>
         </div>
-        <div class="streak-card">
+        <div class="streak-card weekly-card">
           <i class="fa-solid fa-bolt"></i>
-          <div class="streak-value">0 Wks</div>
-          <div class="streak-title">Weekly Streak</div>
+          <div class="streak-val" id="weeklyStreakVal">0 Wks</div>
+          <div class="streak-lbl">Weekly Streak</div>
         </div>
-        <div class="streak-card">
-          <i class="fa-solid fa-medal"></i>
-          <div class="streak-value">0</div>
-          <div class="streak-title">Perfect Wks</div>
+        <div class="streak-card badge-card">
+          <i class="fa-solid fa-award"></i>
+          <div class="streak-val" id="perfectBadgeVal">0</div>
+          <div class="streak-lbl">Perfect Wks</div>
         </div>
-        <div class="streak-card">
+        <div class="streak-card shield-card">
           <i class="fa-solid fa-shield-cat"></i>
-          <div class="streak-value" style="color: var(--accent-teal);">Active</div>
-          <div class="streak-title">Streak Shield</div>
+          <div class="streak-val" id="streakShieldVal">Active</div>
+          <div class="streak-lbl">Streak Shield</div>
         </div>
       </div>
     </div>
 
-    <!-- BLOCK 6: MONTHLY GRAPH -->
+    <!-- BLOCK 7: Monthly Consistency Graph -->
     <div class="block-card">
       <div class="block-header-title">
-        <i class="fa-solid fa-calendar-days"></i> BLOCK 6: MONTHLY GRAPH
+        <i class="fa-solid fa-calendar-grid"></i> Block 7: Monthly Graph
       </div>
-      <div class="graph-grid">
-        <div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div>
-        <div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div>
-        <div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div>
-        <div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell"></div><div class="graph-cell active"></div><div class="graph-cell"></div>
+      <div class="graph-grid" id="consistencyGraph"></div>
+    </div>
+
+    <!-- BLOCK 8: Analytics -->
+    <div class="block-card">
+      <div class="block-header-title">
+        <i class="fa-solid fa-chart-pie"></i> Block 8: Productivity Analytics
+      </div>
+      <div style="height: 180px; position: relative;">
+        <canvas id="categoryChart"></canvas>
       </div>
     </div>
 
-    <!-- BLOCK 7: PRODUCTIVITY ANALYTICS -->
+    <!-- BLOCK 9: Study / Education Category -->
     <div class="block-card">
       <div class="block-header-title">
-        <i class="fa-solid fa-chart-pie"></i> BLOCK 7: PRODUCTIVITY ANALYTICS
+        <i class="fa-solid fa-book-open"></i> Block 9: Study / Education
       </div>
-      <div class="chart-placeholder">
-        <div class="chart-legend">
-          <span><span class="dot" style="background: var(--accent-purple);"></span>Study</span>
-          <span><span class="dot" style="background: var(--accent-pink);"></span>Sports</span>
-          <span><span class="dot" style="background: var(--accent-teal);"></span>Others</span>
-        </div>
-        <div class="chart-ring"><div class="chart-inner"></div></div>
-      </div>
+      <ul class="task-list" id="listStudy" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'study')"></ul>
+      <div class="cat-empty" id="emptyStudy">No study tasks.</div>
     </div>
 
-    <!-- BLOCK 8: STUDY / EDUCATION -->
+    <!-- BLOCK 10: Sports / Exercise Category -->
     <div class="block-card">
       <div class="block-header-title">
-        <i class="fa-solid fa-book-open"></i> BLOCK 8: STUDY / EDUCATION
+        <i class="fa-solid fa-dumbbell"></i> Block 10: Sports / Exercise
       </div>
-      <div id="studyList" class="task-list"></div>
+      <ul class="task-list" id="listSports" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'sports')"></ul>
     </div>
 
-    <!-- BLOCK 9: SPORTS / EXERCISE -->
+    <!-- BLOCK 11: Others Category -->
     <div class="block-card">
       <div class="block-header-title">
-        <i class="fa-solid fa-dumbbell"></i> BLOCK 9: SPORTS / EXERCISE
+        <i class="fa-solid fa-layer-group"></i> Block 11: Others
       </div>
-      <div id="sportsList" class="task-list"></div>
-    </div>
-
-    <!-- BLOCK 10: OTHERS -->
-    <div class="block-card">
-      <div class="block-header-title">
-        <i class="fa-solid fa-layer-group"></i> BLOCK 10: OTHERS
-      </div>
-      <div id="othersList" class="task-list"></div>
+      <ul class="task-list" id="listOthers" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'others')"></ul>
+      <div class="cat-empty" id="emptyOthers">No general tasks.</div>
     </div>
 
   </div>
+  
+  <!-- Quest Log Modal -->
+  <div class="modal-overlay" id="questLogModal">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span><i class="fa-solid fa-scroll" style="color: var(--accent-glow);"></i> Completed Quest Log</span>
+        <button class="action-btn" onclick="closeQuestLogModal()"><i class="fa-solid fa-xmark" style="font-size: 1.2rem;"></i></button>
+      </div>
+      <div id="questLogList" style="overflow-y: auto; max-height: 320px;"></div>
+    </div>
+  </div>
+
+  <!-- Shop Modal -->
+  <div class="modal-overlay" id="shopModal">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span><i class="fa-solid fa-store" style="color: var(--accent-glow);"></i> Theme Shop</span>
+        <button class="action-btn" onclick="closeShopModal()"><i class="fa-solid fa-xmark" style="font-size: 1.2rem;"></i></button>
+      </div>
+      <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Equip unlocked themes using earned XP!</div>
+      <button class="chat-btn" style="width: 100%; margin-bottom: 8px;" onclick="applyTheme('theme-cyberpunk', 2)">Equip Cyberpunk (Level 2)</button>
+      <button class="chat-btn" style="width: 100%; margin-bottom: 8px;" onclick="applyTheme('theme-amoled', 3)">Equip Midnight AMOLED (Level 3)</button>
+      <button class="chat-btn" style="width: 100%;" onclick="applyTheme('theme-sunset', 4)">Equip Sunset Gold (Level 4)</button>
+    </div>
+  </div>
 
   <script>
-    let tasks = JSON.parse(localStorage.getItem("tasksphere_tasks")) || [];
-    let currentFilter = "all";
-
-    // Clock Display Function
     function updateClock() {
       const now = new Date();
-      document.getElementById("timeDisplay").innerText = now.toLocaleTimeString();
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+      const dateEl = document.getElementById("liveDate");
+      const timeEl = document.getElementById("liveTime");
 
-    function saveAndRender() {
-      localStorage.setItem("tasksphere_tasks", JSON.stringify(tasks));
+      if (dateEl && timeEl) {
+        const dateOptions = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+        dateEl.innerHTML = `<i class="fa-regular fa-calendar-days" style="margin-right: 6px;"></i>${now.toLocaleDateString(undefined, dateOptions)}`;
+        const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        timeEl.textContent = now.toLocaleTimeString(undefined, timeOptions);
+      }
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Web Audio Synthesizer
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      },
+      playCompleteSound() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(783.99, this.ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.2);
+        } catch (e) {}
+      },
+      playChirp() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.1);
+        } catch (e) {}
+      }
+    };
+
+    const RANKS = [
+      { level: 1, minXP: 0, title: "Novice Tasker", icon: "fa-shield-halved" },
+      { level: 2, minXP: 250, title: "Apprentice", icon: "fa-bolt" },
+      { level: 3, minXP: 500, title: "Productive Knight", icon: "fa-chess-knight" },
+      { level: 4, minXP: 750, title: "Task Master", icon: "fa-crown" },
+      { level: 5, minXP: 1000, title: "Legendary Producer", icon: "fa-gem" }
+    ];
+
+    let tasks = JSON.parse(localStorage.getItem("acode_tasks_v16")) || [];
+    let xp = parseInt(localStorage.getItem("acode_xp_v16")) || 0;
+    let activityLog = JSON.parse(localStorage.getItem("acode_activity_v16")) || {};
+    let currentFilter = "all";
+    let myChart = null;
+
+    let petEnergy = parseInt(localStorage.getItem("pet_energy")) || 50;
+    let bossHp = parseInt(localStorage.getItem("boss_hp")) || 500;
+
+    let focusTimer = null;
+    let focusTimeTotal = 1500;
+    let focusTimeLeft = 1500;
+    let isFocusActive = false;
+
+    const taskForm = document.getElementById("taskForm");
+    const taskInput = document.getElementById("taskInput");
+    const estTimeInput = document.getElementById("estTimeInput");
+    const prioritySelect = document.getElementById("prioritySelect");
+    const categorySelect = document.getElementById("categorySelect");
+    const dueDateInput = document.getElementById("dueDateInput");
+    const repeatSelect = document.getElementById("repeatSelect");
+
+    const rankName = document.getElementById("rankName");
+    const levelTag = document.getElementById("levelTag");
+    const rankIcon = document.getElementById("rankIcon");
+    const xpBarFill = document.getElementById("xpBarFill");
+    const currentXPText = document.getElementById("currentXPText");
+    const nextLevelXPText = document.getElementById("nextLevelXPText");
+    const completedCount = document.getElementById("completedCount");
+
+    const statTotal = document.getElementById("statTotal");
+    const statPending = document.getElementById("statPending");
+    const statRate = document.getElementById("statRate");
+
+    function init() {
+      requestNotificationPermission();
+      updateRankUI();
+      updateStreakAndGraph();
+      updateTamagotchiAndBoss();
+      renderChart();
       renderTasks();
+
+      taskForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        addTask();
+      });
+
+      document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+          e.target.classList.add("active");
+          currentFilter = e.target.dataset.filter;
+          renderTasks();
+        });
+      });
+
+      setInterval(checkPushNotifications, 30000);
+      setInterval(renderTasks, 60000);
+    }
+
+    // Push Notifications
+    function requestNotificationPermission() {
+      if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+    }
+
+    function checkPushNotifications() {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      const now = new Date();
+
+      tasks.forEach(task => {
+        if (!task.completed && task.dueDate) {
+          const due = new Date(task.dueDate);
+          const diff = due - now;
+          if (diff > 0 && diff <= 60000 && !task.notified) {
+            new Notification("TaskSphere Reminder!", {
+              body: `Quest Due Now: ${task.text}`,
+              icon: "https://cdn-icons-png.flaticon.com/512/906/906334.png"
+            });
+            AudioEngine.playChirp();
+            task.notified = true;
+          }
+        }
+      });
+    }
+
+    // Drag and Drop
+        let draggedTaskId = null;
+
+function handleDragStart(e, id) {
+  draggedTaskId = id;
+  e.dataTransfer.setData("text/plain", id);
+  e.target.classList.add("dragging");
+}
+
+function handleDragEnd(e) {
+  e.target.classList.remove("dragging");
+}
+
+function allowDrop(e) {
+  e.preventDefault(); // Necessary to allow dropping
+}
+
+function handleDrop(e, targetCategory) {
+  e.preventDefault();
+  if (!draggedTaskId) return;
+
+  // Find the dropped task and update its category
+  const taskIndex = tasks.findIndex(t => t.id === draggedTaskId);
+  if (taskIndex !== -1) {
+    const [movedTask] = tasks.splice(taskIndex, 1);
+    movedTask.category = targetCategory; // Changes category if dragged to another block
+    tasks.unshift(movedTask); // Moves to top of list
+    saveAndRender();
+  }
+  draggedTaskId = null;
+}
+
+    // Focus Timer
+    function applyCustomFocusTime() {
+      if (isFocusActive) return;
+      const mins = parseInt(document.getElementById("customFocusMins").value) || 25;
+      focusTimeTotal = mins * 60;
+      focusTimeLeft = focusTimeTotal;
+      updateFocusDisplay();
+    }
+
+    function setPresetTime(mins) {
+      if (isFocusActive) return;
+      document.getElementById("customFocusMins").value = mins;
+      applyCustomFocusTime();
+    }
+
+    function updateFocusDisplay() {
+      const mins = Math.floor(focusTimeLeft / 60);
+      const secs = focusTimeLeft % 60;
+      document.getElementById("focusTimerDisplay").textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function toggleFocusSession() {
+      const btn = document.getElementById("startFocusBtn");
+
+      if (isFocusActive) {
+        clearInterval(focusTimer);
+        isFocusActive = false;
+        btn.innerHTML = `<i class="fa-solid fa-play"></i> Start Focus`;
+        applyCustomFocusTime();
+        return;
+      }
+
+      isFocusActive = true;
+      btn.innerHTML = `<i class="fa-solid fa-pause"></i> Stop`;
+
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+
+      focusTimer = setInterval(() => {
+        focusTimeLeft--;
+        updateFocusDisplay();
+
+        if (focusTimeLeft <= 0) {
+          clearInterval(focusTimer);
+          isFocusActive = false;
+          btn.innerHTML = `<i class="fa-solid fa-play"></i> Start Focus`;
+          AudioEngine.playCompleteSound();
+          if (typeof confetti === 'function') confetti({ particleCount: 50, spread: 60 });
+          xp += 50;
+          updateRankUI();
+          applyCustomFocusTime();
+        }
+      }, 1000);
+    }
+
+    // Tamagotchi & Boss
+    function updateTamagotchiAndBoss() {
+      const lvl = getCurrentLevel();
+      const avatarEl = document.getElementById("tamagotchiAvatar");
+      const nameEl = document.getElementById("petNameLabel");
+      const moodEl = document.getElementById("petMoodText");
+
+      // Check if pet just hatched/evolved
+const previousStage = avatarEl.dataset.stage || "1";
+
+if (lvl === 1) {
+  avatarEl.textContent = "🥚";
+  nameEl.textContent = "Baby Egg (Gain 250 XP to hatch!)";
+  avatarEl.dataset.stage = "1";
+} else if (lvl < 4) {
+  avatarEl.textContent = "🐉";
+  nameEl.textContent = "Companion Dragon";
+  
+  // Trigger hatch celebration animation if newly hatched
+  if (previousStage === "1") {
+    avatarEl.classList.add("happy-dance");
+    if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 80 });
+    AudioEngine.playCompleteSound();
+    alert("🎉 CONGRATULATIONS! Your Baby Egg has hatched into a Companion Dragon!");
+  }
+  avatarEl.dataset.stage = "2";
+} else {
+  avatarEl.textContent = "🧙‍♂️";
+  nameEl.textContent = "Wizard Companion";
+  avatarEl.dataset.stage = "3";
+}
+
+      if (petEnergy <= 20) {
+        moodEl.textContent = "Sleeping / Sad";
+        moodEl.style.color = "#ef4444";
+      } else {
+        moodEl.textContent = "Happy & Active";
+        moodEl.style.color = "#10b981";
+      }
+
+      document.getElementById("petEnergyBar").style.width = `${petEnergy}%`;
+      document.getElementById("bossHpText").textContent = `${bossHp} / 500 HP`;
+      document.getElementById("bossHpFill").style.width = `${(bossHp / 500) * 100}%`;
+
+      localStorage.setItem("pet_energy", petEnergy);
+      localStorage.setItem("boss_hp", bossHp);
+    }
+
+    function interactPet() {
+      const el = document.getElementById("tamagotchiAvatar");
+      el.classList.add("happy-dance");
+      AudioEngine.playChirp();
+      setTimeout(() => el.classList.remove("happy-dance"), 1500);
+    }
+
+    function feedPet() {
+  if (petEnergy >= 100) {
+    alert("Your companion is already at full energy!");
+    return;
+  }
+
+  // Cost to feed: 10 XP
+  const manaCost = 10;
+
+  if (xp < manaCost) {
+    alert(`Not enough Mana! You need at least ${manaCost} XP to feed your pet. Complete more tasks to earn XP!`);
+    return;
+  }
+
+  // Deduct XP and restore energy
+  xp -= manaCost;
+  petEnergy = Math.min(100, petEnergy + 20);
+
+  AudioEngine.playChirp();
+  interactPet();
+  saveAndRender(); // Saves updated XP and energy to localStorage and refreshes UI
+}
+
+    function openShopModal() { document.getElementById("shopModal").classList.add("active"); }
+    function closeShopModal() { document.getElementById("shopModal").classList.remove("active"); }
+
+    function openQuestLogModal() {
+      const logList = document.getElementById("questLogList");
+      logList.innerHTML = "";
+
+      const completedTasks = tasks.filter(t => t.completed);
+      if (completedTasks.length === 0) {
+        logList.innerHTML = `<div style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No quests completed yet!</div>`;
+      } else {
+        completedTasks.forEach(t => {
+          const div = document.createElement("div");
+          div.className = "quest-log-item";
+          div.innerHTML = `
+            <div>
+              <div style="font-weight:700;">${escapeHTML(t.text)}</div>
+              <div style="font-size:0.65rem; color:var(--text-muted);">${t.category.toUpperCase()} • +${getPriorityXP(t.priority)} XP</div>
+            </div>
+            <i class="fa-solid fa-check-double" style="color:var(--accent-green);"></i>
+          `;
+          logList.appendChild(div);
+        });
+      }
+      document.getElementById("questLogModal").classList.add("active");
+    }
+
+    function closeQuestLogModal() { document.getElementById("questLogModal").classList.remove("active"); }
+
+    function getPriorityXP(priority) {
+      if (priority === "high") return 20;
+      if (priority === "medium") return 15;
+      return 10;
+    }
+
+    function getCurrentLevel() {
+      let lvl = 1;
+      for (let i = RANKS.length - 1; i >= 0; i--) {
+        if (xp >= RANKS[i].minXP) { lvl = RANKS[i].level; break; }
+      }
+      return lvl;
+    }
+
+    function updateRankUI() {
+      let currentRank = RANKS[0];
+      let nextRank = RANKS[1];
+
+      for (let i = RANKS.length - 1; i >= 0; i--) {
+        if (xp >= RANKS[i].minXP) {
+          currentRank = RANKS[i];
+          nextRank = RANKS[i + 1] || null;
+          break;
+        }
+      }
+
+      rankName.textContent = currentRank.title;
+      levelTag.textContent = `Level ${currentRank.level}`;
+      rankIcon.className = `fa-solid ${currentRank.icon} rank-badge-icon`;
+      currentXPText.textContent = `${xp} XP`;
+
+      if (nextRank) {
+        const xpInCurrentLevel = xp - currentRank.minXP;
+        const xpNeededForNext = nextRank.minXP - currentRank.minXP;
+        const progress = Math.min((xpInCurrentLevel / xpNeededForNext) * 100, 100);
+        xpBarFill.style.width = `${progress}%`;
+        nextLevelXPText.textContent = `${nextRank.minXP - xp} XP to next level`;
+      } else {
+        xpBarFill.style.width = "100%";
+        nextLevelXPText.textContent = "MAX RANK REACHED!";
+      }
+
+      localStorage.setItem("acode_xp_v16", xp);
+      updateTamagotchiAndBoss();
+    }
+
+    function getTodayKey(d = new Date()) { return d.toISOString().split('T')[0]; }
+
+    function recordActivity() {
+      const today = getTodayKey();
+      activityLog[today] = (activityLog[today] || 0) + 1;
+      localStorage.setItem("acode_activity_v16", JSON.stringify(activityLog));
+      updateStreakAndGraph();
+    }
+
+    function updateStreakAndGraph() {
+      const today = new Date();
+      let dailyStreak = 0;
+      let checkDate = new Date();
+
+      while (true) {
+        const key = getTodayKey(checkDate);
+        if (activityLog[key] && activityLog[key] > 0) {
+          dailyStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else if (getTodayKey(checkDate) === getTodayKey(today)) {
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else { break; }
+      }
+
+      document.getElementById("dailyStreakVal").textContent = `${dailyStreak} Days`;
+      document.getElementById("weeklyStreakVal").textContent = `${Math.floor(dailyStreak / 7)} Wks`;
+      document.getElementById("perfectBadgeVal").textContent = Math.floor(dailyStreak / 7);
+
+      const graphContainer = document.getElementById("consistencyGraph");
+      graphContainer.innerHTML = "";
+
+      for (let i = 27; i >= 0; i--) {
+        const day = new Date();
+        day.setDate(day.getDate() - i);
+        const key = getTodayKey(day);
+        const count = activityLog[key] || 0;
+
+        const cell = document.createElement("div");
+        cell.className = "graph-cell";
+        if (count >= 5) cell.classList.add("lvl-3");
+        else if (count >= 2) cell.classList.add("lvl-2");
+        else if (count >= 1) cell.classList.add("lvl-1");
+
+        cell.title = `${key}: ${count} completed`;
+        graphContainer.appendChild(cell);
+      }
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      const studyCount = tasks.filter(t => t.category === 'study' && t.completed).length;
+      const sportsCount = tasks.filter(t => t.category === 'sports' && t.completed).length;
+      const othersCount = tasks.filter(t => t.category === 'others' && t.completed).length;
+
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Study', 'Sports', 'Others'],
+          datasets: [{
+            data: [studyCount || 1, sportsCount || 1, othersCount || 1],
+            backgroundColor: ['#8b5cf6', '#ec4899', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Outfit' } } } }
+        }
+      });
     }
 
     function addTask() {
-      const input = document.getElementById("taskInput");
-      const text = input.value.trim();
+      const text = taskInput.value.trim();
       if (!text) return;
-
-      const category = document.getElementById("categorySelect").value;
-      const priority = document.getElementById("prioritySelect").value;
-      const tagVal = document.getElementById("tagInput").value.trim();
 
       const newTask = {
         id: Date.now(),
-        text: text,
-        category: category,
-        priority: priority,
-        tag: tagVal ? (tagVal.startsWith("#") ? tagVal : `#${tagVal}`) : null,
-        completed: false
+        text,
+        estMins: estTimeInput.value || null,
+        priority: prioritySelect.value,
+        category: categorySelect.value,
+        dueDate: dueDateInput.value || null,
+        repeat: repeatSelect.value,
+        completed: false,
+        subtasks: []
       };
 
-      tasks.push(newTask);
-      input.value = "";
-      document.getElementById("tagInput").value = "";
+      tasks.unshift(newTask);
+      saveAndRender();
+      taskInput.value = "";
+      estTimeInput.value = "";
+      dueDateInput.value = "";
+      repeatSelect.value = "none";
+    }
+
+    function addSubtask(taskId, subInputId) {
+      const subText = document.getElementById(subInputId).value.trim();
+      if (!subText) return;
+
+      tasks = tasks.map(t => {
+        if (t.id === taskId) {
+          return { ...t, subtasks: [...(t.subtasks || []), { id: Date.now(), text: subText, done: false }] };
+        }
+        return t;
+      });
+
+      saveAndRender();
+    }
+
+    function toggleSubtask(taskId, subId) {
+      tasks = tasks.map(t => {
+        if (t.id === taskId) {
+          const updatedSubs = (t.subtasks || []).map(s => {
+            if (s.id === subId) {
+              if (!s.done) {
+                xp += 5;
+                AudioEngine.playChirp();
+              }
+              return { ...s, done: !s.done };
+            }
+            return s;
+          });
+          return { ...t, subtasks: updatedSubs };
+        }
+        return t;
+      });
+
       saveAndRender();
     }
 
     function toggleTask(id) {
-      tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+      tasks = tasks.map(task => {
+        if (task.id === id) {
+          const isCompleting = !task.completed;
+          const taskXP = getPriorityXP(task.priority);
+
+          if (isCompleting) {
+            xp += taskXP;
+            petEnergy = Math.min(100, petEnergy + 10);
+            bossHp = Math.max(0, bossHp - taskXP);
+            recordActivity();
+            AudioEngine.playCompleteSound();
+            interactPet();
+            if (typeof confetti === 'function') confetti({ particleCount: 25, spread: 40, origin: { y: 0.8 } });
+          } else {
+            xp = Math.max(0, xp - taskXP);
+          }
+          return { ...task, completed: isCompleting };
+        }
+        return task;
+      });
+
       saveAndRender();
     }
 
@@ -274,66 +1454,105 @@
       saveAndRender();
     }
 
-    function setFilter(filter, btn) {
-      currentFilter = filter;
-      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+    function saveAndRender() {
+      localStorage.setItem("acode_tasks_v16", JSON.stringify(tasks));
       renderTasks();
+      updateRankUI();
+      renderChart();
     }
 
     function renderTasks() {
-      const studyList = document.getElementById("studyList");
-      const sportsList = document.getElementById("sportsList");
-      const othersList = document.getElementById("othersList");
+      const listStudy = document.getElementById("listStudy");
+      const listSports = document.getElementById("listSports");
+      const listOthers = document.getElementById("listOthers");
 
-      studyList.innerHTML = "";
-      sportsList.innerHTML = "";
-      othersList.innerHTML = "";
+      listStudy.innerHTML = "";
+      listSports.innerHTML = "";
+      listOthers.innerHTML = "";
 
-      let total = tasks.length;
-      let completedCount = tasks.filter(t => t.completed).length;
-      let pendingCount = total - completedCount;
-      let percentage = total > 0 ? Math.round((completedCount / total) * 100) : 0;
-
-      document.getElementById("totalTasksCount").innerText = total;
-      document.getElementById("pendingTasksCount").innerText = pendingCount;
-      document.getElementById("donePercentage").innerText = `${percentage}%`;
-
-      let filteredTasks = tasks.filter(t => {
+      const filteredTasks = tasks.filter(t => {
         if (currentFilter === "active") return !t.completed;
         if (currentFilter === "completed") return t.completed;
         return true;
       });
 
-      const categories = { study: studyList, sports: sportsList, others: othersList };
-      const counts = { study: 0, sports: 0, others: 0 };
-
+      let studyCount = 0, sportsCount = 0, othersCount = 0;
       filteredTasks.forEach(task => {
-        const container = categories[task.category] || othersList;
-        counts[task.category]++;
+        const li = document.createElement("li");
+        li.className = `task-item ${task.completed ? "completed" : ""}`;
+        li.draggable = true;
+        li.ondragstart = (e) => handleDragStart(e, task.id);
+        li.ondragend = (e) => handleDragEnd(e);
 
-        const item = document.createElement("div");
-        item.className = `task-item ${task.completed ? "completed" : ""}`;
-        item.innerHTML = `
-          <div class="task-left">
-            <input type="checkbox" class="task-checkbox" ${task.completed ? "checked" : ""} onchange="toggleTask(${task.id})" />
-            <span class="task-text">${escapeHtml(task.text)}</span>
+        const subtasksHtml = (task.subtasks || []).map(s => `
+          <div class="subtask-item ${s.done ? 'done' : ''}">
+            <input type="checkbox" ${s.done ? 'checked' : ''} onclick="toggleSubtask(${task.id}, ${s.id})" />
+            <span>${escapeHTML(s.text)}</span>
           </div>
-          <button class="delete-btn" onclick="deleteTask(${task.id})"><i class="fa-solid fa-trash"></i></button>
+        `).join('');
+
+        const subInputId = `sub_in_${task.id}`;
+
+        li.innerHTML = `
+          <div class="task-main-row">
+            <div class="custom-check" onclick="toggleTask(${task.id})">
+              <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="task-content">
+              <span class="task-text">${escapeHTML(task.text)}</span>
+              <div class="task-meta">
+                <span class="priority-badge p-${task.priority}">${task.priority === 'high' ? 'hard' : task.priority} (+${getPriorityXP(task.priority)} XP)</span>
+                ${task.estMins ? `<span class="est-badge"><i class="fa-regular fa-hourglass"></i> ${task.estMins}m</span>` : ''}
+              </div>
+            </div>
+            <button class="action-btn" onclick="deleteTask(${task.id})">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          
+          <div class="subtask-container">
+            ${subtasksHtml}
+            <div class="subtask-add-row">
+              <input type="text" id="${subInputId}" class="subtask-input" placeholder="Add subtask..." />
+              <button class="sub-btn" onclick="addSubtask(${task.id}, '${subInputId}')">+ Subtask</button>
+            </div>
+          </div>
         `;
-        container.appendChild(item);
+
+        if (task.category === "study") { listStudy.appendChild(li); studyCount++; }
+        else if (task.category === "sports") { listSports.appendChild(li); sportsCount++; }
+        else { listOthers.appendChild(li); othersCount++; }
       });
 
-      if (counts.study === 0) studyList.innerHTML = `<div class="empty-text">No study tasks.</div>`;
-      if (counts.sports === 0) sportsList.innerHTML = `<div class="empty-text">No workout tasks.</div>`;
-      if (counts.others === 0) othersList.innerHTML = `<div class="empty-text">No general tasks.</div>`;
+      document.getElementById("emptyStudy").style.display = studyCount === 0 ? "block" : "none";
+      document.getElementById("emptySports").style.display = sportsCount === 0 ? "block" : "none";
+      document.getElementById("emptyOthers").style.display = othersCount === 0 ? "block" : "none";
+
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.completed).length;
+      const pending = total - completed;
+      const rate = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+      statTotal.textContent = total;
+      statPending.textContent = pending;
+      statRate.textContent = `${rate}%`;
+      completedCount.textContent = completed;
     }
 
-    function escapeHtml(text) {
-      return text.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]);
+    function applyTheme(themeClass, reqLvl) {
+      if (getCurrentLevel() < reqLvl) {
+        alert(`Requires Level ${reqLvl}! Gain XP to unlock.`);
+        return;
+      }
+      document.body.className = themeClass;
+      closeShopModal();
     }
 
-    renderTasks();
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+
+    init();
   </script>
 </body>
 </html>
