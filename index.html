@@ -142,7 +142,7 @@
       gap: 8px;
     }
 
-    .time-header, .time-banner {
+    .time-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -157,7 +157,7 @@
 
     .live-time { color: #fff; font-weight: 700; }
 
-    .stats-grid, .stats-row {
+    .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
@@ -172,26 +172,11 @@
       text-align: center;
     }
 
-    .stat-value, .stat-num { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+    .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
     .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
 
     .input-form { display: flex; flex-direction: column; gap: 10px; }
-    .input-row { display: flex; gap: 8px; width: 100%; align-items: stretch; }
-    .input-row > input, .input-row > select { min-height: 40px; }
-    #tagInput { flex: 1; min-width: 0; }
-    #repeatSelect { flex: 1; }
-
-    @media (max-width: 430px) {
-      body { padding: 10px; }
-      .dashboard-layout { gap: 12px; }
-      .block-card { padding: 14px; }
-      .input-row { flex-wrap: wrap; }
-      .input-row:first-of-type > #taskInput { flex: 1 1 100%; }
-      .input-row:first-of-type > #estMinsInput { flex: 1; max-width: none !important; }
-      .input-row:first-of-type > #prioritySelect { flex: 1; width: auto; }
-      .stats-row { gap: 6px; }
-      .stat-box { padding: 7px 4px; }
-    }
+    .input-row { display: flex; gap: 8px; width: 100%; }
 
     .task-input {
       flex: 1;
@@ -862,7 +847,6 @@
         <i class="fa-solid fa-dumbbell"></i> Block 10: Sports / Exercise
       </div>
       <ul class="task-list" id="listSports" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'sports')"></ul>
-      <div class="cat-empty" id="emptySports">No sports tasks.</div>
     </div>
 
     <!-- BLOCK 11: Others Category -->
@@ -904,8 +888,8 @@
   <script>
     function updateClock() {
       const now = new Date();
-      const dateEl = document.getElementById("dateDisplay");
-      const timeEl = document.getElementById("timeDisplay");
+      const dateEl = document.getElementById("liveDate");
+      const timeEl = document.getElementById("liveTime");
 
       if (dateEl && timeEl) {
         const dateOptions = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
@@ -981,11 +965,13 @@
     let focusTimeLeft = 1500;
     let isFocusActive = false;
 
-        const taskInput = document.getElementById("taskInput");
-    const estTimeInput = document.getElementById("estMinsInput");
+    const taskForm = document.getElementById("taskForm");
+    const taskInput = document.getElementById("taskInput");
+    const estTimeInput = document.getElementById("estTimeInput");
     const prioritySelect = document.getElementById("prioritySelect");
     const categorySelect = document.getElementById("categorySelect");
-        const repeatSelect = document.getElementById("repeatSelect");
+    const dueDateInput = document.getElementById("dueDateInput");
+    const repeatSelect = document.getElementById("repeatSelect");
 
     const rankName = document.getElementById("rankName");
     const levelTag = document.getElementById("levelTag");
@@ -995,9 +981,9 @@
     const nextLevelXPText = document.getElementById("nextLevelXPText");
     const completedCount = document.getElementById("completedCount");
 
-    const statTotal = document.getElementById("totalTasksCount");
-    const statPending = document.getElementById("pendingTasksCount");
-    const statRate = document.getElementById("donePercentage");
+    const statTotal = document.getElementById("statTotal");
+    const statPending = document.getElementById("statPending");
+    const statRate = document.getElementById("statRate");
 
     function init() {
       requestNotificationPermission();
@@ -1006,6 +992,11 @@
       updateTamagotchiAndBoss();
       renderChart();
       renderTasks();
+
+      taskForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        addTask();
+      });
 
       document.querySelectorAll(".filter-btn").forEach(btn => {
         btn.addEventListener("click", (e) => {
@@ -1364,10 +1355,7 @@ if (lvl === 1) {
 
     function addTask() {
       const text = taskInput.value.trim();
-      if (!text) {
-        taskInput.focus();
-        return;
-      }
+      if (!text) return;
 
       const newTask = {
         id: Date.now(),
@@ -1375,8 +1363,7 @@ if (lvl === 1) {
         estMins: estTimeInput.value || null,
         priority: prioritySelect.value,
         category: categorySelect.value,
-        tag: document.getElementById("tagInput").value.trim(),
-        dueDate: null,
+        dueDate: dueDateInput.value || null,
         repeat: repeatSelect.value,
         completed: false,
         subtasks: []
@@ -1386,7 +1373,7 @@ if (lvl === 1) {
       saveAndRender();
       taskInput.value = "";
       estTimeInput.value = "";
-      document.getElementById("tagInput").value = "";
+      dueDateInput.value = "";
       repeatSelect.value = "none";
     }
 
@@ -1504,7 +1491,6 @@ if (lvl === 1) {
               <div class="task-meta">
                 <span class="priority-badge p-${task.priority}">${task.priority === 'high' ? 'hard' : task.priority} (+${getPriorityXP(task.priority)} XP)</span>
                 ${task.estMins ? `<span class="est-badge"><i class="fa-regular fa-hourglass"></i> ${task.estMins}m</span>` : ''}
-                ${task.tag ? `<span class="est-badge">${escapeHTML(task.tag)}</span>` : ''}
               </div>
             </div>
             <button class="action-btn" onclick="deleteTask(${task.id})">
@@ -1527,8 +1513,7 @@ if (lvl === 1) {
       });
 
       document.getElementById("emptyStudy").style.display = studyCount === 0 ? "block" : "none";
-      const emptySports = document.getElementById("emptySports");
-      if (emptySports) emptySports.style.display = sportsCount === 0 ? "block" : "none";
+      document.getElementById("emptySports").style.display = sportsCount === 0 ? "block" : "none";
       document.getElementById("emptyOthers").style.display = othersCount === 0 ? "block" : "none";
 
       const total = tasks.length;
