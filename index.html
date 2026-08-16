@@ -97,12 +97,13 @@
     }
 
     .nav-brand {
-      font-size: 1.1rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #a855f7, #ec4899);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+  font-size: 1.1rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+                                     }
 
     .nav-actions { display: flex; gap: 6px; }
 
@@ -402,10 +403,11 @@
     .rank-title { display: flex; align-items: center; gap: 8px; }
 
     .rank-badge-icon {
-      font-size: 1.3rem;
-      background: linear-gradient(135deg, #f59e0b, #ef4444);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
     }
 
     .rank-name { font-weight: 700; font-size: 0.95rem; }
@@ -841,7 +843,7 @@
       <div class="block-header-title">
         <i class="fa-solid fa-book-open"></i> Block 9: Study / Education
       </div>
-      <ul class="task-list" id="listStudy" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'study')"></ul>
+      <ul class="task-list" id="listStudy"></ul>
       <div class="cat-empty" id="emptyStudy">No study tasks.</div>
     </div>
 
@@ -850,7 +852,8 @@
       <div class="block-header-title">
         <i class="fa-solid fa-dumbbell"></i> Block 10: Sports / Exercise
       </div>
-      <ul class="task-list" id="listSports" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'sports')"></ul>
+      <ul class="task-list" id="listSports"></ul>
+      <div class="cat-empty" id="emptySports">No sports tasks.</div>
     </div>
 
     <!-- BLOCK 11: Others Category -->
@@ -858,7 +861,7 @@
       <div class="block-header-title">
         <i class="fa-solid fa-layer-group"></i> Block 11: Others
       </div>
-      <ul class="task-list" id="listOthers" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'others')"></ul>
+      <ul class="task-list" id="listOthers"></ul>
       <div class="cat-empty" id="emptyOthers">No general tasks.</div>
     </div>
 
@@ -955,7 +958,25 @@
       { level: 5, minXP: 1000, title: "Legendary Producer", icon: "fa-gem" }
     ];
 
-    let tasks = JSON.parse(localStorage.getItem("acode_tasks_v16")) || [];
+    /**
+ * @type {Array<{
+ *   id: number,
+ *   text: string,
+ *   estMins: string|null,
+ *   priority: string,
+ *   category: string,
+ *   dueDate: string|null,
+ *   repeat: string,
+ *   completed: boolean,
+ *   subtasks: Array<{
+ *     id: number,
+ *     text: string,
+ *     done: boolean
+ *   }>,
+ *   notified?: boolean
+ * }>}
+ */
+let tasks = JSON.parse(localStorage.getItem("acode_tasks_v16")) || [];
     let xp = parseInt(localStorage.getItem("acode_xp_v16")) || 0;
     let activityLog = JSON.parse(localStorage.getItem("acode_activity_v16")) || {};
     let currentFilter = "all";
@@ -1042,38 +1063,74 @@
       });
     }
 
-    // Drag and Drop
-        let draggedTaskId = null;
+// ===============================
+// DRAG AND DROP
+// ===============================
 
+let draggedTaskId = null;
+
+/**
+ * @param {DragEvent} e
+ * @param {number} id
+ */
 function handleDragStart(e, id) {
   draggedTaskId = id;
-  e.dataTransfer.setData("text/plain", id);
-  e.target.classList.add("dragging");
+
+  if (e.dataTransfer) {
+    e.dataTransfer.setData("text/plain", String(id));
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  if (e.currentTarget instanceof HTMLElement) {
+    e.currentTarget.classList.add("dragging");
+  }
 }
 
+/**
+ * @param {DragEvent} e
+ */
 function handleDragEnd(e) {
-  e.target.classList.remove("dragging");
+  if (e.currentTarget instanceof HTMLElement) {
+    e.currentTarget.classList.remove("dragging");
+  }
 }
 
+/**
+ * @param {DragEvent} e
+ */
 function allowDrop(e) {
-  e.preventDefault(); // Necessary to allow dropping
+  e.preventDefault();
+
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = "move";
+  }
 }
 
+/**
+ * @param {DragEvent} e
+ * @param {string} targetCategory
+ */
 function handleDrop(e, targetCategory) {
   e.preventDefault();
-  if (!draggedTaskId) return;
 
-  // Find the dropped task and update its category
-  const taskIndex = tasks.findIndex(t => t.id === draggedTaskId);
+  if (draggedTaskId === null) return;
+
+  const taskIndex = tasks.findIndex(
+    task => task.id === draggedTaskId
+  );
+
   if (taskIndex !== -1) {
     const [movedTask] = tasks.splice(taskIndex, 1);
-    movedTask.category = targetCategory; // Changes category if dragged to another block
-    tasks.unshift(movedTask); // Moves to top of list
+
+    movedTask.category = targetCategory;
+
+    tasks.unshift(movedTask);
+
     saveAndRender();
   }
-  draggedTaskId = null;
-}
 
+  draggedTaskId = null;
+              }
     // Focus Timer
     function applyCustomFocusTime() {
       if (isFocusActive) return;
@@ -1083,11 +1140,15 @@ function handleDrop(e, targetCategory) {
       updateFocusDisplay();
     }
 
-    function setPresetTime(mins) {
-      if (isFocusActive) return;
-      document.getElementById("customFocusMins").value = mins;
-      applyCustomFocusTime();
-    }
+  /**
+ * @param {number} mins
+ */
+function setPresetTime(mins) {
+  if (isFocusActive) return;
+
+  document.getElementById("customFocusMins").value = mins;
+  applyCustomFocusTime();
+}
 
     function updateFocusDisplay() {
       const mins = Math.floor(focusTimeLeft / 60);
@@ -1129,6 +1190,35 @@ function handleDrop(e, targetCategory) {
         }
       }, 1000);
     }
+
+    // ===============================
+// CATEGORY DROP ZONES
+// ===============================
+
+const studyList = document.getElementById("listStudy");
+const sportsList = document.getElementById("listSports");
+const othersList = document.getElementById("listOthers");
+
+if (studyList) {
+  studyList.addEventListener("dragover", allowDrop);
+  studyList.addEventListener("drop", e => {
+    handleDrop(e, "study");
+  });
+}
+
+if (sportsList) {
+  sportsList.addEventListener("dragover", allowDrop);
+  sportsList.addEventListener("drop", e => {
+    handleDrop(e, "sports");
+  });
+}
+
+if (othersList) {
+  othersList.addEventListener("dragover", allowDrop);
+  othersList.addEventListener("drop", e => {
+    handleDrop(e, "others");
+  });
+}
 
     // Tamagotchi & Boss
     function updateTamagotchiAndBoss() {
@@ -1237,6 +1327,11 @@ if (lvl === 1) {
 
     function closeQuestLogModal() { document.getElementById("questLogModal").classList.remove("active"); }
 
+    /**
+     * Returns XP awarded for a task priority.
+     * @param {string} priority
+     * @returns {number}
+     */
     function getPriorityXP(priority) {
       if (priority === "high") return 20;
       if (priority === "medium") return 15;
@@ -1381,67 +1476,119 @@ if (lvl === 1) {
       repeatSelect.value = "none";
     }
 
-    function addSubtask(taskId, subInputId) {
-      const subText = document.getElementById(subInputId).value.trim();
-      if (!subText) return;
+/**
+ * @param {number} taskId
+ * @param {string} subInputId
+ */
+function addSubtask(taskId, subInputId) 
+{
+  const subText = document.getElementById(subInputId).value.trim();
+  if (!subText) return;
 
-      tasks = tasks.map(t => {
-        if (t.id === taskId) {
-          return { ...t, subtasks: [...(t.subtasks || []), { id: Date.now(), text: subText, done: false }] };
-        }
-        return t;
-      });
-
-      saveAndRender();
-    }
-
-    function toggleSubtask(taskId, subId) {
-      tasks = tasks.map(t => {
-        if (t.id === taskId) {
-          const updatedSubs = (t.subtasks || []).map(s => {
-            if (s.id === subId) {
-              if (!s.done) {
-                xp += 5;
-                AudioEngine.playChirp();
-              }
-              return { ...s, done: !s.done };
-            }
-            return s;
-          });
-          return { ...t, subtasks: updatedSubs };
-        }
-        return t;
-      });
-
-      saveAndRender();
-    }
-
-    function toggleTask(id) {
-      tasks = tasks.map(task => {
-        if (task.id === id) {
-          const isCompleting = !task.completed;
-          const taskXP = getPriorityXP(task.priority);
-
-          if (isCompleting) {
-            xp += taskXP;
-            petEnergy = Math.min(100, petEnergy + 10);
-            bossHp = Math.max(0, bossHp - taskXP);
-            recordActivity();
-            AudioEngine.playCompleteSound();
-            interactPet();
-            if (typeof confetti === 'function') confetti({ particleCount: 25, spread: 40, origin: { y: 0.8 } });
-          } else {
-            xp = Math.max(0, xp - taskXP);
+  tasks = tasks.map(t => {
+    if (t.id === taskId) {
+      return {
+        ...t,
+        subtasks: [
+          ...(t.subtasks || []),
+          {
+            id: Date.now(),
+            text: subText,
+            done: false
           }
-          return { ...task, completed: isCompleting };
-        }
-        return task;
-      });
-
-      saveAndRender();
+        ]
+      };
     }
 
-    function deleteTask(id) {
+    return t;
+  });
+
+  saveAndRender();
+    }
+  
+/**
+ * @param {number} taskId
+ * @param {number} subId
+ */
+function toggleSubtask(taskId, subId) {
+  tasks = tasks.map(t => {
+    if (t.id === taskId) {
+      const updatedSubs = (t.subtasks || []).map(s => {
+        if (s.id === subId) {
+          if (!s.done) {
+            xp += 5;
+            AudioEngine.playChirp();
+          }
+
+          return {
+            ...s,
+            done: !s.done
+          };
+        }
+
+        return s;
+      });
+
+      return {
+        ...t,
+        subtasks: updatedSubs
+      };
+    }
+
+    return t;
+  });
+
+  saveAndRender();
+}
+
+    /**
+ * @param {number} id
+ */
+function toggleTask(id) {
+  tasks = tasks.map(task => {
+    if (task.id === id) {
+      const isCompleting = !task.completed;
+      const taskXP = getPriorityXP(task.priority);
+
+      if (isCompleting) {
+        xp += taskXP;
+        petEnergy = Math.min(100, petEnergy + 10);
+        bossHp = Math.max(0, bossHp - taskXP);
+        recordActivity();
+        AudioEngine.playCompleteSound();
+        interactPet();
+
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 25,
+            spread: 40,
+            origin: { y: 0.8 }
+          });
+        }
+      } else {
+        xp = Math.max(0, xp - taskXP);
+      }
+
+      return {
+        ...task,
+        completed: isCompleting
+      };
+    }
+
+    return task;
+  });
+
+  saveAndRender();
+}
+/**
+ * @param {number} id
+ */
+function deleteTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+
+      if (!confirm(`Delete task "${task.text}"?`)) return;
+
       tasks = tasks.filter(t => t.id !== id);
       saveAndRender();
     }
@@ -1531,20 +1678,58 @@ if (lvl === 1) {
       completedCount.textContent = completed;
     }
 
-    function applyTheme(themeClass, reqLvl) {
-      if (getCurrentLevel() < reqLvl) {
-        alert(`Requires Level ${reqLvl}! Gain XP to unlock.`);
-        return;
-      }
-      document.body.className = themeClass;
-      closeShopModal();
-    }
+    /**
+ * Apply an unlocked theme.
+ *
+ * @param {string} themeClass
+ * @param {number} reqLvl
+ */
+function applyTheme(themeClass, reqLvl) {
+  if (getCurrentLevel() < reqLvl) {
+    alert(`Requires Level ${reqLvl}! Gain XP to unlock.`);
+    return;
+  }
 
-    function escapeHTML(str) {
-      return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
-    }
+  document.body.className = themeClass;
+  closeShopModal();
+}
 
-    init();
+/**
+ * Escape HTML special characters.
+ *
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeHTML(str) {
+  return String(str).replace(
+    /[&<>'"]/g,
+    (tag) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+}
+
+// Expose functions used by dynamically generated HTML controls.
+window.addSubtask = addSubtask;
+window.toggleSubtask = toggleSubtask;
+window.toggleTask = toggleTask;
+window.deleteTask = deleteTask;
+window.openQuestLogModal = openQuestLogModal;
+window.closeQuestLogModal = closeQuestLogModal;
+window.openShopModal = openShopModal;
+window.closeShopModal = closeShopModal;
+window.interactPet = interactPet;
+window.feedPet = feedPet;
+window.applyCustomFocusTime = applyCustomFocusTime;
+window.setPresetTime = setPresetTime;
+window.toggleFocusSession = toggleFocusSession;
+window.applyTheme = applyTheme;
+
+init();
   </script>
 </body>
 </html>
