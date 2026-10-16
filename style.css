@@ -40,3 +40,68 @@ button:active{transform:scale(.97)}
 @keyframes timerBreathe{50%{filter:drop-shadow(0 0 18px color-mix(in srgb,var(--accent) 28%,transparent))}}
 @media(max-width:650px){.panel:hover,.stat-card:hover,.boss-card:hover,.bounty-panel:hover,.streak-shield:hover{transform:none}.main-content{padding-bottom:calc(84px + env(safe-area-inset-bottom))}.sidebar{height:calc(61px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Focus room: ambient depth, low-distraction session state, and compact touch controls. */
+.focus-options{display:flex;gap:8px;margin:12px 0 4px}
+.focus-option{min-height:36px;display:flex;align-items:center;gap:7px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--muted);font-size:10px;cursor:pointer;transition:all .2s ease}
+.focus-option i{color:var(--accent);font-size:11px}
+.focus-option[aria-pressed="true"]{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));color:var(--text);background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
+.option-state{color:var(--faint);font-size:9px}
+.focus-option[aria-pressed="true"] .option-state{color:var(--green)}
+.timer-ring{transition:filter .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+.timer-ring.timer-active{transform:scale(1.025)}
+.timer-inner{transition:background .5s ease,box-shadow .5s ease}
+.is-running .timer-inner{background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--accent) 12%,var(--panel)),var(--panel) 72%);box-shadow:inset 0 0 40px color-mix(in srgb,var(--accent) 8%,transparent)}
+.focus-breathing{display:flex;align-items:center;justify-content:center;gap:5px;height:25px;margin:5px 0 3px;color:var(--faint);font-size:9px;letter-spacing:.2px}
+.focus-breathing span{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.42;animation:breathDots 1.8s ease-in-out infinite}
+.focus-breathing span:nth-child(2){animation-delay:.22s}.focus-breathing span:nth-child(3){animation-delay:.44s}
+@keyframes breathDots{50%{opacity:1;transform:scale(1.75);box-shadow:0 0 9px var(--accent)}}
+.focus-panel.is-running .live-tag{color:var(--green)}
+.focus-panel.is-running .live-tag>span:first-child{animation:livePulse 1.5s ease-in-out infinite}
+@keyframes livePulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--green) 12%,transparent)}}
+.focus-immersive{overflow:hidden}
+.focus-immersive::before{content:"";position:fixed;inset:0;z-index:30;background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);animation:veilIn .35s ease both}
+@keyframes veilIn{from{opacity:0}to{opacity:1}}
+.focus-immersive .main-content>*:not(.dashboard-grid),.focus-immersive .dashboard-grid>.column-main,.focus-immersive .dashboard-grid>.column-side>*:not(#focus){filter:blur(5px);opacity:.12;pointer-events:none;transition:filter .35s ease,opacity .35s ease}
+.focus-immersive .sidebar{filter:blur(5px);opacity:0;pointer-events:none}
+.focus-immersive #focus{position:fixed;z-index:31;left:50%;top:50%;transform:translate(-50%,-50%);width:min(500px,calc(100vw - 32px));max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;padding:clamp(22px,5vw,38px);box-shadow:0 35px 120px #0008,0 0 80px color-mix(in srgb,var(--accent) 12%,transparent);animation:focusReveal .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes focusReveal{from{opacity:0;translate:0 12px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+.focus-immersive #focus .timer-ring{width:min(310px,72vw);height:min(310px,72vw);margin:24px auto}
+.focus-immersive #focus .timer-inner strong{font-size:clamp(54px,13vw,76px)}
+.focus-immersive #focus .focus-breathing{margin:10px 0}
+.focus-immersive #immersiveToggle{color:var(--text)}
+@media(max-width:650px){.focus-options{gap:6px}.focus-option{flex:1;justify-content:center;padding:0 6px;font-size:9px}.focus-immersive #focus{width:calc(100vw - 24px);max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);padding:20px}.focus-immersive #focus .timer-ring{margin:18px auto}}
+@media(prefers-reduced-motion:reduce){.focus-breathing span,.focus-panel.is-running .live-tag>span:first-child{animation:none!important}}
+
+/* Quick capture, comfort preferences, and legible urgency states. */
+.quick-add-top{color:var(--accent)!important}
+.quick-add-fab{position:fixed;right:28px;bottom:25px;z-index:8;display:flex;align-items:center;gap:9px;padding:0 17px;height:48px;border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:15px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 95%,white),var(--accent));color:#15121e;font-weight:800;font-size:12px;box-shadow:0 10px 30px color-mix(in srgb,var(--accent) 30%,transparent);cursor:pointer;transition:transform .2s,box-shadow .2s}
+.quick-add-fab:hover{transform:translateY(-3px);box-shadow:0 15px 35px color-mix(in srgb,var(--accent) 42%,transparent)}
+.quick-add-fab i{font-size:14px}
+.quick-add-form>label{display:block;margin:15px 0 7px;color:var(--muted);font-size:11px}
+.quick-add-form>.quest-input{width:100%;padding:0 13px;margin-bottom:14px}
+.quick-add-form .setup-note,.setup-note{color:var(--faint);font-size:10px;line-height:1.6;margin-top:14px}
+.modal-divider{border:0;border-top:1px solid var(--line);margin:22px 0}
+.modal-field input[type=range]{width:100%;accent-color:var(--accent)}
+.modal-field select{width:100%;height:40px;padding:0 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text)}
+.toast-action{border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));background:color-mix(in srgb,var(--accent) 14%,transparent);border-radius:7px;color:var(--accent);font-size:10px;font-weight:750;padding:6px 9px;cursor:pointer;white-space:nowrap}
+.toast{display:flex;align-items:center;gap:9px}.toast-action{margin-left:auto}
+.quest-item .due-overdue{color:#ff7c87!important;border-color:#ff7c8740!important;background:#ff7c8714!important}
+.quest-item .due-soon{color:var(--gold)!important;border-color:color-mix(in srgb,var(--gold) 25%,transparent)!important;background:color-mix(in srgb,var(--gold) 8%,transparent)!important}
+.welcome-mark{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:#171420;background:linear-gradient(135deg,#d2bdff,#8873e5);font-size:24px;margin-bottom:18px;box-shadow:0 8px 28px #a78bfa40}
+.welcome-features{display:grid;gap:10px;margin:18px 0 22px;color:var(--muted);font-size:12px}
+.modal-row{flex-wrap:wrap}
+.demo-tag{display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:5px;background:color-mix(in srgb,var(--accent) 9%,transparent);color:var(--accent);font-size:8px;font-weight:800;letter-spacing:.5px;padding:2px 5px;margin-left:5px}
+.motion-subtle *, .motion-subtle *::before,.motion-subtle *::after{animation-duration:calc(var(--motion-duration,1s) * 1.65)!important;transition-duration:.28s!important}
+.motion-subtle .focus-breathing span{animation-duration:3s!important}
+.motion-reduced *, .motion-reduced *::before,.motion-reduced *::after{animation:none!important;scroll-behavior:auto!important;transition:none!important}
+@media(max-width:650px){.quick-add-top{display:none!important}.quick-add-fab{right:15px;bottom:calc(76px + env(safe-area-inset-bottom));height:44px;padding:0 14px}.modal-row>*{flex:1}.quick-add-form .primary-btn{width:100%}}
+@media(max-width:360px){.quick-add-fab{width:46px;justify-content:center;padding:0;border-radius:50%}.quick-add-fab span{display:none}}
+.board-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+[aria-pressed]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.modal{max-height:calc(100vh - 36px);overflow-y:auto;overscroll-behavior:contain}
+.modal-field input[type=range]{cursor:pointer}
+.quest-title{overflow-wrap:anywhere}
+@media(max-width:650px){.quick-add-fab{box-shadow:0 5px 18px color-mix(in srgb,var(--accent) 24%,transparent)}}
+/* Keep the central timer display from showing a text-selection I-beam. */
+.timer-ring,.timer-inner,.timer-inner *{cursor:default;user-select:none;-webkit-user-select:none}
